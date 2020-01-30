@@ -1,11 +1,5 @@
 const functions = require('firebase-functions');
-const admin = require('firebase-admin'); //admin sdk used to get access to the database
-// var serviceAccount = require("../socialbug-7d392-firebase-adminsdk-phg2v-7fe02f5942.json");
-
-// admin.initializeApp({
-//   credential: admin.credential.cert(serviceAccount),
-//   databaseURL: "https://socialbug-7d392.firebaseio.com"
-// });
+const admin = require('firebase-admin'); 
 admin.initializeApp();
 const express = require('express');
 const app = express();
