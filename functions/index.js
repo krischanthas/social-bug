@@ -1,7 +1,7 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin'); 
 
-admin.initializeApp();
+// admin.initializeApp();
 const express = require('express');
 
 
@@ -73,7 +73,7 @@ app.post('/shout', (request, response) => {
                   console.error(err);
             });
 });
-// helper function for validating
+// Helper functions
 const isEmpty = (string) => {
       if(string.trim() === '') {
             return true;
@@ -83,7 +83,6 @@ const isEmpty = (string) => {
 }
 const isEmail = (email) => {
       const regEx = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-
       if(email.match(regEx)) {
             return true;
       }
@@ -96,6 +95,8 @@ app.post('/signup', (request, response) => {
             confirmPassword: request.body.confirmPassword,
             handle: request.body.handle,
       };
+
+      /* New user validation */
       let errors = {};
       if(isEmpty(newUser.email)) {
             errors.email = 'Must not be empty';
@@ -104,7 +105,10 @@ app.post('/signup', (request, response) => {
       }
 
       if(isEmpty(newUser.password)) errors.password = 'Must not by empty';
-      if(newUser.password === newUser.confirmPassword) errors.confirmPassword = 'Passwords must match';
+      if(newUser.password !== newUser.confirmPassword) errors.confirmPassword = 'Passwords must match';
+      if(isEmpty(newUser.handle)) errors.handle = 'Must not be empty';
+
+      if(Object.keys(errors).length > 0) return response.status(400).json(errors);
 
       let token, userId;
       db.doc(`/users/${newUser.handle}`).get()
