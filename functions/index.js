@@ -54,7 +54,42 @@ app.get('/shouts', (request, response) => {
       .catch((err) => console.error(err));
 });
 
-app.post('/shout', (request, response) => {
+// middleware // authenticate user access token to identify login status. MUST be logged in to post shout.
+const FBAuth = (request, response, next) => {
+      let idToken;
+      if(request.headers.authorization && request.headers.authorization.startsWith('Bearer ')) {
+            idToken = request.headers.authorization.split('Bearer ')[1];
+      } else { // no token, send error response
+            console.error('No token found');
+            return response.status(403).json({ error: 'Unauthorized'});
+      }
+
+      // check to make sure token was issued by this app
+      admin.auth().verifyIdToken(idToken)
+            .then(decodedToken => {
+                  // add decoded user data to request object
+                  request.user = decodedToken;
+                  console.log(decodedToken);
+                  // get user handle from collections
+                  return db.collection('users')
+                              .where('userId', '==', request.user.uid)
+                              .limit(1)
+                              .get();
+            })
+            .then(data => {
+                  request.user.handle = data.docs[0].data().handle;
+                  return next();
+            })
+            .catch(err => {
+                  console.error('Error verifying token ', err);
+                  return response.status(403).json(err);
+            });
+};
+
+app.post('/shout', FBAuth, (request, response) => {
+      if(request.body.body.trim() === '') {
+            return response.status(400).json({body: 'Body must not be empty'});
+      }
       const newShout = {
             body: request.body.body,
             userName: request.body.userName,
@@ -65,7 +100,7 @@ app.post('/shout', (request, response) => {
       db.collection('shouts')
             .add(newShout)
             .then((doc) => {
-                  response.json({ message: `document ${doc.id} created successfully`});
+                  return response.json({ message: `document ${doc.id} created successfully`});
             })
             .catch((err) => {
                   // change status code
@@ -73,6 +108,7 @@ app.post('/shout', (request, response) => {
                   console.error(err);
             });
 });
+
 // Helper functions
 const isEmpty = (string) => {
       if(string.trim() === '') {
