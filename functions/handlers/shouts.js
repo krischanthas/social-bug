@@ -41,3 +41,59 @@ exports.postOneShout = (request, response) => {
                   console.error(err);
             });
 };
+
+/* Fetch one shout post */
+exports.getShout = (request, response) => {
+      let shoutData = {};
+      db.doc(`/shouts/${request.params.shoutId}`).get()
+            .then(doc => {
+                  if(!doc.exists) {
+                        return response.status(404).json({ error: 'Shout not found'});
+                  } 
+                  shoutData = doc.data();
+                  shoutData.shoutId = doc.id;
+                  return db.collection('comments').orderBy('createdAt', 'desc').where('shoutId', '==', request.params.shoutId).get();
+            })
+            .then(data => {
+                  shoutData.comment = [];
+                  data.forEach(doc => {
+                        shoutData.comment.push(doc.data())
+                  });
+
+                  return response.json(shoutData);
+            })
+            .catch(err => {
+                  console.error(err);
+                  response.status(500).json({error: err.code});
+            });
+};
+
+/* Comment on a shout post */
+exports.commentOnShout = (request,response) => {
+      if(request.body.body.trim() === '') {
+            return response.status(400).json({error: 'Must not be empty'})
+      }
+      
+      const newComment = {
+            body: request.body.body,
+            createdAt: new Date().toISOString(),
+            shoutId: request.params.shoutId,
+            userName: request.user.handle,
+            userImage: request.user.imageUrl
+      };
+      
+      db.doc(`/shouts/${request.params.shoutId}`).get()
+            .then(doc => {
+                  if(!doc.exists) {
+                        return response.status(404).json({ error: 'Shout not found'});
+                  }
+                  return db.collection('comments').add(newComment);
+            })
+            .then(() => {
+                  response.json(newComment); 
+            })
+            .catch(err => {
+                  console.error(err);
+                  response.status(500).json({error: 'Something went wrong'});
+            });
+};
