@@ -104,6 +104,30 @@ exports.addUserDetails = (request, response) => {
             });
 };
 
+/* Get Authenticated User */
+exports.getAuthenticatedUser = (request, response) => {
+      let userData = {};
+      db.doc(`/users/${request.user.handle}`).get()
+            .then(doc => {
+                  if(doc.exists) {
+                        userData.credentials = doc.data();
+                        return db.collection('likes').where('userHandle', '==', request.user.handle).get();
+                  }
+            })
+            .then(data => {
+                  userData.likes = [];
+                  data.forEach(doc => {
+                        userData.likes.push(doc.data());
+                  });
+                  return response.json(userData)
+            })
+            .catch(err => {
+                  console.error(err);
+                  return response.status(500).json({ error: err.code});
+            })
+
+}
+
 /* Upload User Profile Image */
 exports.uploadImage = (request, response) => {
       const BusBoy = require('busboy');
