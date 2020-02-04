@@ -1,4 +1,4 @@
-const { admin } = require('./admin');
+const { admin, db } = require('./admin');
 
 module.exports = (request, response, next) => {
       let idToken;
@@ -14,7 +14,6 @@ module.exports = (request, response, next) => {
             .then(decodedToken => {
                   // add decoded user data to request object
                   request.user = decodedToken;
-                  console.log(decodedToken);
                   // get user handle from collections
                   return db.collection('users')
                               .where('userId', '==', request.user.uid)
