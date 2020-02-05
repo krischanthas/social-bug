@@ -104,6 +104,42 @@ exports.addUserDetails = (request, response) => {
             });
 };
 
+/* Get Any User's Details */
+exports.getUserDetails = (request, response) => {
+      const userData = {};
+      db.doc(`/users/${request.params.handle}`).get()
+            .then(doc => {
+                  if(doc.exists) {
+                        userData.user = doc.data();
+                        return db.collection(`shouts`)
+                              .where('userName', '==', request.params.handle)
+                              .orderBy('createdAt', 'desc')
+                              .get();
+                  } else {
+                        return response.status(404).json({error: 'User not found'});
+                  }
+            })
+            .then(data => {
+                  userData.shouts = [];
+                  data.forEach(doc => {
+                        userData.shouts.push({
+                              body: doc.data().body,
+                              createdAt: doc.data().createdAt,
+                              userName: doc.data().userName,
+                              userImage: doc.data().userImage,
+                              likeCount: doc.data().likeCount,
+                              commentCount: doc.data().commentCount,
+                              screamId: doc.id
+                        });
+                  });
+                  return response.json(userData);
+            })
+            .catch(err => {
+                  console.error(err);
+                  return response.status(500).json({error: err.code});
+            });
+};
+
 /* Get Authenticated User */
 exports.getAuthenticatedUser = (request, response) => {
       let userData = {};
@@ -119,7 +155,25 @@ exports.getAuthenticatedUser = (request, response) => {
                   data.forEach(doc => {
                         userData.likes.push(doc.data());
                   });
-                  return response.json(userData)
+                  return db.collection ('notifications')
+                        .where('recipient', '==', request.user.handle )
+                        .orderBy('createdAt', 'desc').limit(10).get();
+
+            })
+            .then(data => {
+                  userData.notifications = [];
+                  data.forEach(doc => {
+                        userData.notifications.push({
+                              recipient: doc.data().recipient,
+                              sender: doc.data().sender,
+                              createdAt: doc.data().createdAt,
+                              shoutId: doc.data().shoutId,
+                              type: doc.data().type,
+                              read: doc.data().read,
+                              notificationsId: doc.id
+                        });
+                  });
+                  return response.json(userData);
             })
             .catch(err => {
                   console.error(err);
@@ -179,4 +233,23 @@ exports.uploadImage = (request, response) => {
       });
 
       busboy.end(request.rawBody);
+};
+
+/* Mark Notification As Read */
+exports.markNotificationsRead = (request,response) => {
+      // execute batch (on multiple docs) write
+      let batch = db.batch();
+      request.body.forEach(notificationId => {
+            const notification = db.doc(`/notifications/${notificationId}`);
+            batch.update(notification, { read: true });
+      });
+      
+      batch.commit()
+            .then(() => {
+                  return response.json({ message: 'Notifications marked read'});
+            })
+            .catch(err => {
+                  console.error(err);
+                  return response.status(500).json({ error: err.code });
+            });
 };
