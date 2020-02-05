@@ -8,7 +8,8 @@ const {
       getShout, 
       commentOnShout,
       likeShout,
-      unlikeShout, 
+      unlikeShout,
+      deleteShout 
 } = require('./handlers/shouts');
 
 const { 
@@ -25,7 +26,7 @@ app.get('/shouts', getAllShouts);
 app.post('/shout', FBAuth, postOneShout);
 app.get('/shouts/:shoutId', getShout);
 app.post('/shout/:shoutId/comment', FBAuth, commentOnShout);
-// todo: delete a shout
+app.delete('/shout/:shoutId', FBAuth, deleteShout);
 app.get('/shout/:shoutId/like', FBAuth, likeShout);
 app.get('/shout/:shoutId/unlike', FBAuth, unlikeShout);
 

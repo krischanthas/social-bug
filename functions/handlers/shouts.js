@@ -179,4 +179,29 @@ exports.unlikeShout = (request, response) => {
             console.error(err);
             response.status(500).json({error: err.code});
       });
+};
+
+/* Delete Shout */
+exports.deleteShout = (request, response) => {
+      const document = db.doc(`/shouts/${request.params.shoutId}`);
+      document
+      .get()
+      .then(doc => {
+            if(!doc.exists) {
+                  return response.status(404).json({error: 'Shout not found'});
+            }
+            // check if this shout belongs to user
+            if(doc.data().userName !== request.user.handle) {
+                  return response.status(403).json({error: 'Unauthorized'});
+            } else {
+                  return document.delete();
+            }
+      })
+      .then(() => {
+            response.json({message: 'Shout deleted successfully'});
+      })
+      .catch(err => {
+            console.error(err);
+            return response.status(500).json({error: err.code});
+      });
 }
