@@ -25,15 +25,19 @@ exports.postOneShout = (request, response) => {
       }
       const newShout = {
             body: request.body.body,
-            userName: request.body.userName,
-            createdAt: new Date().toISOString()
-            // createdAt: admin.firestore.Timestamp.fromDate(new Date())
+            userName: request.user.handle,
+            userImage: request.user.imageUrl,
+            createdAt: new Date().toISOString(), // createdAt: admin.firestore.Timestamp.fromDate(new Date())
+            likeCount: 0,
+            commentCount: 0
       };
 
       db.collection('shouts')
             .add(newShout)
             .then((doc) => {
-                  return response.json({ message: `document ${doc.id} created successfully`});
+                  const responseShout = newShout;
+                  responseShout.shoutId = doc.id;
+                  return response.json({responseShout});
             })
             .catch((err) => {
                   // change status code
@@ -87,6 +91,9 @@ exports.commentOnShout = (request,response) => {
                   if(!doc.exists) {
                         return response.status(404).json({ error: 'Shout not found'});
                   }
+                  return doc.ref.update({commentCount: doc.data().commentCount+ 1})
+            })
+            .then(() => {
                   return db.collection('comments').add(newComment);
             })
             .then(() => {
@@ -97,3 +104,79 @@ exports.commentOnShout = (request,response) => {
                   response.status(500).json({error: 'Something went wrong'});
             });
 };
+
+/* Like a shout post */
+exports.likeShout = (request, response) => {
+      const likeDocument = db.collection('likes')
+            .where('userName', '==', request.user.handle)
+            .where('shoutId', '==', request.params.shoutId)
+            .limit(1);
+
+      const shoutDocument = db.doc(`/shouts/${request.params.shoutId}`);
+
+      let shoutData;
+
+      shoutDocument.get().then(doc => {
+            if(doc.exists) {
+                  shoutData = doc.data();
+                  shoutData.shoutId = doc.id;
+                  return likeDocument.get();
+            }
+            return response.status(404).json({error: 'Shout not foujnd'});
+      })
+      .then(data => {
+            if(data.empty) {
+                  return db.collection('likes').add({ 
+                        shoutId: request.params.shoutId,
+                        userName: request.user.handle
+                  })
+                  .then(() => {
+                        shoutData.likeCount++;
+                        return shoutDocument.update({likeCount: shoutData.likeCount});
+                  });
+            } else {
+                  return response.status(400).json({error: 'Shout already liked'});
+            }
+      })
+      .catch(err => {
+            console.error(err);
+            response.status(500).json({error: err.code});
+      });
+};
+
+/* unlike a shout post */
+exports.unlikeShout = (request, response) => {
+      const likeDocument = db.collection('likes').where('userName', '==', request.user.handle).where('shoutId', '==', request.params.shoutId).limit(1);
+
+      const shoutDocument = db.doc(`/shouts/${request.params.shoutId}`);
+
+      let shoutData;
+
+      shoutDocument.get().then(doc => {
+            if(doc.exists) {
+                  shoutData = doc.data();
+                  shoutData.shoutId = doc.id;
+                  return likeDocument.get();
+            } else {
+                  return response.status(404).json({error: 'Shout not found'});
+            }
+      })
+      .then(data => {
+            if(data.empty) {
+                  return response.status(400).json({error: 'Shout not liked'});
+            } else {
+                  return db.doc(`/likes/${data.docs[0].id}`).delete()
+                  .then(() => {
+                        shoutData.likeCount--;
+                        return shoutDocument.update({likeCount: shoutData.likeCount});
+                  })
+                  .then(() => {
+                        response.json(shoutData);
+                  })
+            }
+      })
+      .catch(err => {
+            console.error(err);
+            response.status(500).json({error: err.code});
+      });
+}

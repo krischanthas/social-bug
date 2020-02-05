@@ -2,20 +2,32 @@ const functions = require('firebase-functions');
 const app = require('express')();
 const  FBAuth  = require('./util/fbAuth');
 
-const { getAllShouts, postOneShout, getShout, commentOnShout } = require('./handlers/shouts');
-const { signUp, logIn, uploadImage, addUserDetails, getAuthenticatedUser } = require('./handlers/users');
+const { 
+      getAllShouts, 
+      postOneShout, 
+      getShout, 
+      commentOnShout,
+      likeShout,
+      unlikeShout, 
+} = require('./handlers/shouts');
+
+const { 
+      signUp, 
+      logIn, 
+      uploadImage, 
+      addUserDetails, 
+      getAuthenticatedUser 
+} = require('./handlers/users');
 
 
 /****************** Shouts Routes ********************** */
 app.get('/shouts', getAllShouts);
 app.post('/shout', FBAuth, postOneShout);
 app.get('/shouts/:shoutId', getShout);
-// todo: comment on a shout
 app.post('/shout/:shoutId/comment', FBAuth, commentOnShout);
 // todo: delete a shout
-// todo: like a shout
-// todo: unline a shout
-
+app.get('/shout/:shoutId/like', FBAuth, likeShout);
+app.get('/shout/:shoutId/unlike', FBAuth, unlikeShout);
 
 /****************** Users Routes ********************** */
 app.post('/signup', signUp);  
