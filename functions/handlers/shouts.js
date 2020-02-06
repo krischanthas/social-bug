@@ -11,7 +11,10 @@ exports.getAllShouts = (request, response) => {
                         shoutId: doc.id,
                         body: doc.data().body,
                         userName: doc.data().userName,
-                        createdAt: doc.data().createdAt
+                        createdAt: doc.data().createdAt,
+                        likeCount: doc.data().likeCount,
+                        commentCount: doc.data().commentCount,
+                        userImage: doc.data().userImage
                   });
             });
             return response.json(shouts);
@@ -61,7 +64,7 @@ exports.getShout = (request, response) => {
             .then(data => {
                   shoutData.comment = [];
                   data.forEach(doc => {
-                        shoutData.comment.push(doc.data())
+                        shoutData.comment.push(doc.data());
                   });
 
                   return response.json(shoutData);
@@ -75,7 +78,7 @@ exports.getShout = (request, response) => {
 /* Comment on a shout post */
 exports.commentOnShout = (request,response) => {
       if(request.body.body.trim() === '') {
-            return response.status(400).json({error: 'Must not be empty'})
+            return response.status(400).json({ comment: 'Must not be empty'});
       }
       
       const newComment = {
@@ -91,7 +94,7 @@ exports.commentOnShout = (request,response) => {
                   if(!doc.exists) {
                         return response.status(404).json({ error: 'Shout not found'});
                   }
-                  return doc.ref.update({commentCount: doc.data().commentCount+ 1})
+                  return doc.ref.update({commentCount: doc.data().commentCount+ 1});
             })
             .then(() => {
                   return db.collection('comments').add(newComment);

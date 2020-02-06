@@ -54,7 +54,7 @@ exports.signUp = (request, response) => {
                   if(err.code === 'auth/email-already-in-use') {
                         return response.status(400).json({email: 'Email is already in use'});
                   } else {
-                        return response.status(500).json({ error: err.code });
+                        return response.status(500).json({ general: 'Something went wrong, please try again'});
                   };
             });
 };
@@ -81,12 +81,8 @@ exports.logIn = (request, response) => {
             })
             .catch(err => {
                   console.error(err);
-                  if(err.code === 'auth/wrong-password') {
-                        return response.status(403).json({general: 'Wrong credentials, please try again'});
-                  } else {
-                        return response.status(500).json({error: err.code});
-                  }
-            })
+                  return response.status(403).json({general: 'Wrong credentials, please try again'});
+            });
 };
 
 
