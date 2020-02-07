@@ -26,17 +26,17 @@ exports.validateSignUpData = (data) => {
         // return errors object if errors exist
 
         return {
-              errors,
-              valid: Object.keys(errors).length  === 0 ? true : false
+            errors,
+            valid: Object.keys(errors).length  === 0 ? true : false
         }
 };
 
 exports.validateLogIn = (data) => {
       let errors = {};
       if(isEmpty(data.email)){
-            return data.email = 'Must not be empty';
+            errors.email = 'Must not be empty';
       } else if(!isEmail(data.email)) {
-            return errors.email = 'Must be valid email address';
+            errors.email = 'Must be valid email address';
       } 
       if(isEmpty(data.password)) return errors.password = 'Must not be empty';
       if(Object.keys(errors).length > 0) return response.status(400).json(errors);

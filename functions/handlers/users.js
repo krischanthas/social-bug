@@ -69,7 +69,7 @@ exports.logIn = (request, response) => {
       const { valid, errors } = validateLogIn(user);
 
       if(!valid) {
-            return response.status(403).json(errors)
+            return response.status(400).json(errors);
       }
       // Continue logging in user
       firebase.auth().signInWithEmailAndPassword(user.email, user.password)
