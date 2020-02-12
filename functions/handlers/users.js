@@ -143,7 +143,7 @@ exports.getAuthenticatedUser = (request, response) => {
             .then(doc => {
                   if(doc.exists) {
                         userData.credentials = doc.data();
-                        return db.collection('likes').where('userHandle', '==', request.user.handle).get();
+                        return db.collection('likes').where('userName', '==', request.user.handle).get();
                   }
             })
             .then(data => {
