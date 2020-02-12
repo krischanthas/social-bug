@@ -125,7 +125,7 @@ exports.likeShout = (request, response) => {
                   shoutData.shoutId = doc.id;
                   return likeDocument.get();
             }
-            return response.status(404).json({error: 'Shout not foujnd'});
+            return response.status(404).json({error: 'Shout not found'});
       })
       .then(data => {
             if(data.empty) {
