@@ -40,7 +40,7 @@ exports.postOneShout = (request, response) => {
             .then((doc) => {
                   const responseShout = newShout;
                   responseShout.shoutId = doc.id;
-                  response.json({responseShout});
+                  response.json(responseShout);
             })
             .catch((err) => {
                   // change status code
