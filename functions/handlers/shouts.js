@@ -162,6 +162,22 @@ exports.likeShout = (request, response) => {
                                     });
                               })
                               .then(() => {
+                                    return db
+                                          .collection("comments")
+                                          .orderBy("createdAt", "desc")
+                                          .where(
+                                                "shoutId",
+                                                "==",
+                                                request.params.shoutId
+                                          )
+                                          .get();
+                              })
+                              .then(data => {
+                                    shoutData.comment = [];
+                                    data.forEach(doc => {
+                                          shoutData.comment.push(doc.data());
+                                    });
+
                                     return response.json(shoutData);
                               });
                   } else {
@@ -169,6 +185,7 @@ exports.likeShout = (request, response) => {
                               .status(400)
                               .json({ error: "Shout already liked" });
                   }
+                  /// new
             })
             .catch(err => {
                   console.error(err);
@@ -217,7 +234,23 @@ exports.unlikeShout = (request, response) => {
                                     });
                               })
                               .then(() => {
-                                    response.json(shoutData);
+                                    return db
+                                          .collection("comments")
+                                          .orderBy("createdAt", "desc")
+                                          .where(
+                                                "shoutId",
+                                                "==",
+                                                request.params.shoutId
+                                          )
+                                          .get();
+                              })
+                              .then(data => {
+                                    shoutData.comment = [];
+                                    data.forEach(doc => {
+                                          shoutData.comment.push(doc.data());
+                                    });
+
+                                    return response.json(shoutData);
                               });
                   }
             })
